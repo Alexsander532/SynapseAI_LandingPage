@@ -10,6 +10,7 @@ import { useState, useEffect } from "react"
 export default function SynapseAILanding() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isVisible, setIsVisible] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     setIsVisible(true)
@@ -17,11 +18,102 @@ export default function SynapseAILanding() {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
     window.addEventListener("mousemove", handleMouseMove)
-    return () => window.removeEventListener("mousemove", handleMouseMove)
+    
+    // Adicionar scroll suave
+    document.documentElement.style.scrollBehavior = 'smooth'
+    
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove)
+      document.documentElement.style.scrollBehavior = 'auto'
+    }
   }, [])
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      const headerHeight = 80 // Altura aproximada do header fixo
+      const elementPosition = element.offsetTop - headerHeight
+      window.scrollTo({
+        top: elementPosition,
+        behavior: 'smooth'
+      })
+    }
+    setIsMobileMenuOpen(false) // Fechar menu mobile após navegação
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 relative overflow-hidden">
+      {/* Header fixo com logo e navegação */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-4">
+            <img 
+              src="/logo-synapse-ai.png" 
+              alt="SynapseAI Logo" 
+              className="h-16 md:h-20 lg:h-24 w-auto hover:scale-105 transition-transform duration-300"
+            />
+            
+            {/* Menu de Navegação */}
+            <nav className="hidden md:flex items-center space-x-8">
+              <button 
+                onClick={() => scrollToSection('inicio')}
+                className="text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium hover:scale-105 transform cursor-pointer"
+              >
+                Início
+              </button>
+              <button 
+                onClick={() => scrollToSection('beneficios')}
+                className="text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium hover:scale-105 transform cursor-pointer"
+              >
+                Benefícios
+              </button>
+              <button 
+                onClick={() => scrollToSection('funcionalidades')}
+                className="text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium hover:scale-105 transform cursor-pointer"
+              >
+                Funcionalidades
+              </button>
+            </nav>
+            
+            {/* Menu Mobile */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden text-gray-300 hover:text-blue-400 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Menu Mobile Dropdown */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden bg-gray-900/95 backdrop-blur-sm border-t border-gray-800">
+              <nav className="px-4 py-4 space-y-4">
+                <button 
+                  onClick={() => scrollToSection('inicio')}
+                  className="block w-full text-left text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium py-2"
+                >
+                  Início
+                </button>
+                <button 
+                  onClick={() => scrollToSection('beneficios')}
+                  className="block w-full text-left text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium py-2"
+                >
+                  Benefícios
+                </button>
+                <button 
+                  onClick={() => scrollToSection('funcionalidades')}
+                  className="block w-full text-left text-gray-300 hover:text-blue-400 transition-colors duration-300 font-medium py-2"
+                >
+                  Funcionalidades
+                </button>
+              </nav>
+            </div>
+          )}
+        </div>
+      </header>
+
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-900/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute top-40 -left-40 w-96 h-96 bg-blue-800/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -37,18 +129,20 @@ export default function SynapseAILanding() {
       />
 
       {/* Hero Section */}
-      <section className="relative z-10 px-4 py-20 sm:px-6 lg:px-8">
+      <section id="inicio" className="relative z-10 px-4 pt-32 pb-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div
             className={`text-center transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
           >
             <div className="relative">
-              <h1 className="text-5xl font-bold tracking-tight text-white sm:text-7xl lg:text-8xl text-balance">
-                A plataforma que organiza toda sua{" "}
-                <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                  vida acadêmica
-                </span>{" "}
-                em um só lugar
+              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight text-center">
+                <div className="block">A plataforma que organiza toda</div>
+                <div className="block">
+                  <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                    a sua vida acadêmica
+                  </span>
+                </div>
+                <div className="block text-3xl md:text-5xl">em um só lugar</div>
               </h1>
             </div>
 
@@ -94,7 +188,7 @@ export default function SynapseAILanding() {
 
       {/* Benefits Section */}
       <SynapseBackgroundPaths>
-        <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 bg-black">
+        <section id="beneficios" className="relative z-10 py-20 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white sm:text-5xl mb-4">
@@ -157,7 +251,7 @@ export default function SynapseAILanding() {
       </SynapseBackgroundPaths>
 
       {/* Features Section */}
-      <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8">
+      <section id="funcionalidades" className="relative z-10 py-20 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-20 items-center">
             <div>
@@ -223,10 +317,10 @@ export default function SynapseAILanding() {
       </section>
 
       <SynapseBackgroundPaths>
-        <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 bg-black">
+        <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 bg-gray-900">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="text-4xl font-bold text-white sm:text-5xl mb-6 text-balance">
-            Sua vida acadêmica, finalmente organizada
+            De estudante, para estudante
           </h2>
           <p className="text-xl text-gray-300 mb-12 text-pretty leading-relaxed">
             Cadastre-se para ser notificado por email e WhatsApp quando o Synapse AI for lançado. Seja um dos primeiros
@@ -267,11 +361,12 @@ export default function SynapseAILanding() {
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-                <Brain className="w-6 h-6 text-white" />
+              <img 
+                src="/logo-synapse-ai.png" 
+                alt="SynapseAI Logo" 
+                className="w-28 h-22 rounded-xl"
+              />
               </div>
-              <span className="text-2xl font-bold text-white">Synapse AI</span>
-            </div>
 
             <div className="flex gap-8 text-gray-400">
               <a href="#" className="hover:text-blue-400 transition-colors hover:scale-105 transform">
