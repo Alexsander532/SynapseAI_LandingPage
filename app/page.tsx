@@ -14,6 +14,16 @@ export default function SynapseAILanding() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isVisible, setIsVisible] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [name1, setName1] = useState('')
+  const [email1, setEmail1] = useState('')
+  const [whatsapp1, setWhatsapp1] = useState('')
+  const [name2, setName2] = useState('')
+  const [email2, setEmail2] = useState('')
+  const [whatsapp2, setWhatsapp2] = useState('')
+  const [isSubmitting1, setIsSubmitting1] = useState(false)
+  const [isSubmitting2, setIsSubmitting2] = useState(false)
+  const [submitMessage1, setSubmitMessage1] = useState('')
+  const [submitMessage2, setSubmitMessage2] = useState('')
 
   useEffect(() => {
     setIsVisible(true)
@@ -42,6 +52,146 @@ export default function SynapseAILanding() {
       })
     }
     setIsMobileMenuOpen(false) // Fechar menu mobile após navegação
+  }
+
+  // Função para formatar email
+  const formatEmail = (value: string) => {
+    // Remove caracteres não permitidos, mantendo letras, números e caracteres válidos de email
+    let formatted = value.replace(/[^a-zA-Z0-9@._-]/g, '')
+    
+    return formatted
+  }
+
+  // Função para formatar WhatsApp
+  const formatWhatsApp = (value: string) => {
+    // Remove tudo que não é número
+    const numbers = value.replace(/\D/g, '')
+    
+    // Aplica a máscara (31)999999999
+    if (numbers.length <= 2) {
+      return `(${numbers}`
+    } else if (numbers.length <= 11) {
+      return `(${numbers.slice(0, 2)})${numbers.slice(2)}`
+    } else {
+      return `(${numbers.slice(0, 2)})${numbers.slice(2, 11)}`
+    }
+  }
+
+  // Handlers para os campos
+  const handleEmailChange1 = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatEmail(e.target.value)
+    setEmail1(formatted)
+  }
+
+  const handleWhatsAppChange1 = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatWhatsApp(e.target.value)
+    setWhatsapp1(formatted)
+  }
+
+  const handleEmailChange2 = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatEmail(e.target.value)
+    setEmail2(formatted)
+  }
+
+  const handleWhatsAppChange2 = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatWhatsApp(e.target.value)
+    setWhatsapp2(formatted)
+  }
+
+  // Função para enviar dados para o webhook
+  const submitToWebhook = async (name: string, email: string, whatsapp: string, formType: 'waitlist' | 'notification') => {
+    try {
+      const response = await fetch('/api/webhook', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          whatsapp,
+          formType
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao enviar dados')
+      }
+
+      return { success: true, message: data.message }
+    } catch (error) {
+      console.error('Erro ao enviar para webhook:', error)
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Erro desconhecido'
+      }
+    }
+  }
+
+  // Handler para o primeiro formulário (Lista de Espera)
+  const handleSubmit1 = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!name1.trim() || !email1.trim() || !whatsapp1.trim()) {
+      setSubmitMessage1('Por favor, preencha todos os campos')
+      return
+    }
+
+    setIsSubmitting1(true)
+    setSubmitMessage1('')
+
+    const result = await submitToWebhook(name1, email1, whatsapp1, 'waitlist')
+    
+    if (result.success) {
+      setSubmitMessage1('✅ Cadastro realizado com sucesso!')
+      // Limpar formulário
+      setName1('')
+      setEmail1('')
+      setWhatsapp1('')
+      
+      // Limpar mensagem após 2 segundos
+      setTimeout(() => {
+        setSubmitMessage1('')
+      }, 2000)
+    } else {
+      setSubmitMessage1(`❌ ${result.message}`)
+    }
+
+    setIsSubmitting1(false)
+  }
+
+  // Handler para o segundo formulário (Notificação)
+  const handleSubmit2 = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!name2.trim() || !email2.trim() || !whatsapp2.trim()) {
+      setSubmitMessage2('Por favor, preencha todos os campos')
+      return
+    }
+
+    setIsSubmitting2(true)
+    setSubmitMessage2('')
+
+    const result = await submitToWebhook(name2, email2, whatsapp2, 'notification')
+    
+    if (result.success) {
+      setSubmitMessage2('✅ Cadastro realizado com sucesso!')
+      // Limpar formulário
+      setName2('')
+      setEmail2('')
+      setWhatsapp2('')
+      
+      // Limpar mensagem após 2 segundos
+      setTimeout(() => {
+        setSubmitMessage2('')
+      }, 2000)
+    } else {
+      setSubmitMessage2(`❌ ${result.message}`)
+    }
+
+    setIsSubmitting2(false)
   }
 
   return (
@@ -221,10 +371,13 @@ export default function SynapseAILanding() {
                         : 'text-white'
                     }`}>Entre na Lista de Espera</h3>
                   </div>
-                  <form className="space-y-4">
+                  <form className="space-y-4" onSubmit={handleSubmit1}>
                     <Input
                       type="text"
                       placeholder="Seu nome"
+                      value={name1}
+                      onChange={(e) => setName1(e.target.value)}
+                      disabled={isSubmitting1}
                       className={`transition-all h-12 ${
                         theme === 'light'
                           ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
@@ -233,7 +386,10 @@ export default function SynapseAILanding() {
                     />
                     <Input
                       type="email"
-                      placeholder="Seu email"
+                      placeholder="exemplo@email.com"
+                      value={email1}
+                      onChange={handleEmailChange1}
+                      disabled={isSubmitting1}
                       className={`transition-all h-12 ${
                         theme === 'light'
                           ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
@@ -242,16 +398,37 @@ export default function SynapseAILanding() {
                     />
                     <Input
                       type="tel"
-                      placeholder="Número do WhatsApp"
+                      placeholder="(31)999999999"
+                      value={whatsapp1}
+                      onChange={handleWhatsAppChange1}
+                      maxLength={13}
+                      disabled={isSubmitting1}
                       className={`transition-all h-12 ${
                         theme === 'light'
                           ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
                           : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
                       }`}
                     />
-                    <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group">
-                      <span>Entrar na Lista de Espera</span>
-                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    {submitMessage1 && (
+                      <div className={`text-sm p-3 rounded-md ${
+                        submitMessage1.includes('✅')
+                          ? theme === 'light'
+                            ? 'bg-green-50 text-green-700 border border-green-200'
+                            : 'bg-green-900/20 text-green-400 border border-green-800'
+                          : theme === 'light'
+                            ? 'bg-red-50 text-red-700 border border-red-200'
+                            : 'bg-red-900/20 text-red-400 border border-red-800'
+                      }`}>
+                        {submitMessage1}
+                      </div>
+                    )}
+                    <Button 
+                      type="submit"
+                      disabled={isSubmitting1}
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
+                      <span>{isSubmitting1 ? 'Enviando...' : 'Entrar na Lista de Espera'}</span>
+                      {!isSubmitting1 && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
                     </Button>
                   </form>
                 </CardContent>
@@ -516,10 +693,13 @@ export default function SynapseAILanding() {
               : 'border-blue-800 bg-gray-800 hover:border-blue-600'
           }`}>
             <CardContent className="p-8">
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleSubmit2}>
                 <Input
                   type="text"
                   placeholder="Seu nome"
+                  value={name2}
+                  onChange={(e) => setName2(e.target.value)}
+                  disabled={isSubmitting2}
                   className={`transition-all h-12 ${
                     theme === 'light'
                       ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
@@ -528,7 +708,10 @@ export default function SynapseAILanding() {
                 />
                 <Input
                   type="email"
-                  placeholder="Seu email"
+                  placeholder="exemplo@email.com"
+                  value={email2}
+                  onChange={handleEmailChange2}
+                  disabled={isSubmitting2}
                   className={`transition-all h-12 ${
                     theme === 'light'
                       ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
@@ -537,16 +720,36 @@ export default function SynapseAILanding() {
                 />
                 <Input
                   type="tel"
-                  placeholder="Número do WhatsApp"
+                  placeholder="(31)999999999"
+                  value={whatsapp2}
+                  onChange={handleWhatsAppChange2}
+                  maxLength={13}
+                  disabled={isSubmitting2}
                   className={`transition-all h-12 ${
                     theme === 'light'
                       ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
                       : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
                   }`}
                 />
-                <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 text-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group">
-                  {/* Centered text */}
-                  Me notifique no lançamento
+                {submitMessage2 && (
+                  <div className={`text-sm p-3 rounded-md ${
+                    submitMessage2.includes('✅')
+                      ? theme === 'light'
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-green-900/20 text-green-400 border border-green-800'
+                      : theme === 'light'
+                        ? 'bg-red-50 text-red-700 border border-red-200'
+                        : 'bg-red-900/20 text-red-400 border border-red-800'
+                  }`}>
+                    {submitMessage2}
+                  </div>
+                )}
+                <Button 
+                  type="submit"
+                  disabled={isSubmitting2}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 text-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {isSubmitting2 ? 'Enviando...' : 'Me notifique no lançamento'}
                 </Button>
               </form>
             </CardContent>
