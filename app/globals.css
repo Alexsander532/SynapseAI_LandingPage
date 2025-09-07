@@ -115,11 +115,57 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Synapse AI Theme Variables */
+:root {
+  /* Light theme colors */
+  --synapse-bg-primary: #ffffff;
+  --synapse-bg-secondary: #f8fafc;
+  --synapse-bg-tertiary: #f1f5f9;
+  --synapse-text-primary: #1e293b;
+  --synapse-text-secondary: #475569;
+  --synapse-text-muted: #64748b;
+  --synapse-border: #e2e8f0;
+  --synapse-card-bg: #ffffff;
+  --synapse-card-border: #e2e8f0;
+  --synapse-header-bg: rgba(255, 255, 255, 0.95);
+  --synapse-input-bg: #f8fafc;
+  --synapse-input-border: #cbd5e1;
+  --synapse-button-primary: #3b82f6;
+  --synapse-button-primary-hover: #2563eb;
+  --synapse-accent: #3b82f6;
+  --synapse-accent-light: #dbeafe;
+}
+
+[data-theme="dark"] {
+  /* Dark theme colors (current design) */
+  --synapse-bg-primary: #0f172a;
+  --synapse-bg-secondary: #1e293b;
+  --synapse-bg-tertiary: #334155;
+  --synapse-text-primary: #f8fafc;
+  --synapse-text-secondary: #cbd5e1;
+  --synapse-text-muted: #94a3b8;
+  --synapse-border: #374151;
+  --synapse-card-bg: #1f2937;
+  --synapse-card-border: #374151;
+  --synapse-header-bg: rgba(15, 23, 42, 0.95);
+  --synapse-input-bg: #374151;
+  --synapse-input-border: #4b5563;
+  --synapse-button-primary: #3b82f6;
+  --synapse-button-primary-hover: #2563eb;
+  --synapse-accent: #3b82f6;
+  --synapse-accent-light: #1e40af;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+  
+  /* Smooth transitions for theme switching */
+  * {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
   }
 }
