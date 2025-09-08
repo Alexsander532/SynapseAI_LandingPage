@@ -14,12 +14,93 @@ export default function SynapseAILanding() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isVisible, setIsVisible] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // Opções de campus
+  const campusOptions = [
+    'Campus I – Nova Suíça',
+    'Campus II – Nova Gameleira',
+    'Campus III – Leopoldina',
+    'Campus IV – Araxá',
+    'Campus V – Divinópolis',
+    'Campus VII – Timóteo',
+    'Campus VIII – Varginha',
+    'Campus IX – Nepomuceno',
+    'Campus X – Curvelo',
+    'Campus XI – Contagem'
+  ]
+
+  // Cursos por campus
+  const coursesByCampus: { [key: string]: string[] } = {
+    'Campus I – Nova Suíça': [
+      'Engenharia Ambiental e Sanitária',
+      'Engenharia de Materiais',
+      'Engenharia de Transportes',
+      'Letras – Tecnologias de Edição',
+      'Química Tecnológica',
+      'Outro'
+    ],
+    'Campus II – Nova Gameleira': [
+      'Administração',
+      'Engenharia da Computação',
+      'Engenharia Civil',
+      'Engenharia Elétrica',
+      'Engenharia Mecânica',
+      'Outro'
+    ],
+    'Campus III – Leopoldina': [
+      'Engenharia de Controle e Automação',
+      'Engenharia de Computação',
+      'Outro'
+    ],
+    'Campus IV – Araxá': [
+      'Engenharia de Automação Industrial',
+      'Engenharia Civil',
+      'Engenharia de Minas',
+      'Outro'
+    ],
+    'Campus V – Divinópolis': [
+      'Engenharia da Computação',
+      'Engenharia Mecatrônica',
+      'Design de Moda',
+      'Outro'
+    ],
+    'Campus VII – Timóteo': [
+      'Engenharia de Computação',
+      'Engenharia Metalúrgica',
+      'Arquitetura e Urbanismo',
+      'Outro'
+    ],
+    'Campus VIII – Varginha': [
+      'Engenharia Civil',
+      'Sistemas de Informação',
+      'Outro'
+    ],
+    'Campus IX – Nepomuceno': [
+      'Engenharia Elétrica',
+      'Outro'
+    ],
+    'Campus X – Curvelo': [
+      'Engenharia Civil',
+      'Engenharia de Energia',
+      'Outro'
+    ],
+    'Campus XI – Contagem': [
+      'Engenharia Química',
+      'Outro'
+    ]
+  }
   const [name1, setName1] = useState('')
   const [email1, setEmail1] = useState('')
   const [whatsapp1, setWhatsapp1] = useState('')
+  const [campus1, setCampus1] = useState('')
+  const [course1, setCourse1] = useState('')
+  const [period1, setPeriod1] = useState('')
   const [name2, setName2] = useState('')
   const [email2, setEmail2] = useState('')
   const [whatsapp2, setWhatsapp2] = useState('')
+  const [campus2, setCampus2] = useState('')
+  const [course2, setCourse2] = useState('')
+  const [period2, setPeriod2] = useState('')
   const [isSubmitting1, setIsSubmitting1] = useState(false)
   const [isSubmitting2, setIsSubmitting2] = useState(false)
   const [submitMessage1, setSubmitMessage1] = useState('')
@@ -98,8 +179,19 @@ export default function SynapseAILanding() {
     setWhatsapp2(formatted)
   }
 
+  // Handlers para campus - resetar curso quando campus mudar
+  const handleCampusChange1 = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCampus1(e.target.value)
+    setCourse1('') // Resetar curso quando campus mudar
+  }
+
+  const handleCampusChange2 = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCampus2(e.target.value)
+    setCourse2('') // Resetar curso quando campus mudar
+  }
+
   // Função para enviar dados para o webhook
-  const submitToWebhook = async (name: string, email: string, whatsapp: string, formType: 'waitlist' | 'notification') => {
+  const submitToWebhook = async (name: string, email: string, whatsapp: string, campus: string, course: string, period: string, formType: 'waitlist' | 'notification') => {
     try {
       const response = await fetch('/api/webhook', {
         method: 'POST',
@@ -110,6 +202,9 @@ export default function SynapseAILanding() {
           name,
           email,
           whatsapp,
+          campus,
+          course,
+          period,
           formType
         })
       })
@@ -134,7 +229,7 @@ export default function SynapseAILanding() {
   const handleSubmit1 = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!name1.trim() || !email1.trim() || !whatsapp1.trim()) {
+    if (!name1.trim() || !email1.trim() || !whatsapp1.trim() || !campus1.trim() || !course1.trim() || !period1.trim()) {
       setSubmitMessage1('Por favor, preencha todos os campos')
       return
     }
@@ -142,7 +237,7 @@ export default function SynapseAILanding() {
     setIsSubmitting1(true)
     setSubmitMessage1('')
 
-    const result = await submitToWebhook(name1, email1, whatsapp1, 'waitlist')
+    const result = await submitToWebhook(name1, email1, whatsapp1, campus1, course1, period1, 'waitlist')
     
     if (result.success) {
       setSubmitMessage1('✅ Cadastro realizado com sucesso!')
@@ -150,6 +245,9 @@ export default function SynapseAILanding() {
       setName1('')
       setEmail1('')
       setWhatsapp1('')
+      setCampus1('')
+      setCourse1('')
+      setPeriod1('')
       
       // Limpar mensagem após 2 segundos
       setTimeout(() => {
@@ -166,7 +264,7 @@ export default function SynapseAILanding() {
   const handleSubmit2 = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!name2.trim() || !email2.trim() || !whatsapp2.trim()) {
+    if (!name2.trim() || !email2.trim() || !whatsapp2.trim() || !campus2.trim() || !course2.trim() || !period2.trim()) {
       setSubmitMessage2('Por favor, preencha todos os campos')
       return
     }
@@ -174,7 +272,7 @@ export default function SynapseAILanding() {
     setIsSubmitting2(true)
     setSubmitMessage2('')
 
-    const result = await submitToWebhook(name2, email2, whatsapp2, 'notification')
+    const result = await submitToWebhook(name2, email2, whatsapp2, campus2, course2, period2, 'notification')
     
     if (result.success) {
       setSubmitMessage2('✅ Cadastro realizado com sucesso!')
@@ -182,6 +280,9 @@ export default function SynapseAILanding() {
       setName2('')
       setEmail2('')
       setWhatsapp2('')
+      setCampus2('')
+      setCourse2('')
+      setPeriod2('')
       
       // Limpar mensagem após 2 segundos
       setTimeout(() => {
@@ -402,6 +503,64 @@ export default function SynapseAILanding() {
                       value={whatsapp1}
                       onChange={handleWhatsAppChange1}
                       maxLength={13}
+                      disabled={isSubmitting1}
+                      className={`transition-all h-12 ${
+                        theme === 'light'
+                          ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                          : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                      }`}
+                    />
+                    <select
+                      value={campus1}
+                      onChange={handleCampusChange1}
+                      disabled={isSubmitting1}
+                      className={`transition-all h-12 w-full rounded-md border px-3 py-1 text-base shadow-xs outline-none ${
+                        theme === 'light'
+                          ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                          : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                      }`}
+                    >
+                      <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione seu campus</option>
+                      {campusOptions.map((campus) => (
+                        <option key={campus} value={campus} className={theme === 'light' ? 'text-gray-900' : 'text-white'}>{campus}</option>
+                      ))}
+                    </select>
+                    {campus1 && (
+                      <select
+                        value={course1}
+                        onChange={(e) => setCourse1(e.target.value)}
+                        disabled={isSubmitting1}
+                        className={`transition-all h-12 w-full rounded-md border px-3 py-1 text-base shadow-xs outline-none ${
+                          theme === 'light'
+                            ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                            : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                        }`}
+                      >
+                        <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione seu curso</option>
+                        {coursesByCampus[campus1]?.map((course) => (
+                          <option key={course} value={course} className={theme === 'light' ? 'text-gray-900' : 'text-white'}>{course}</option>
+                        ))}
+                      </select>
+                    )}
+                    {course1 === 'Outro' && (
+                      <Input
+                        type="text"
+                        placeholder="Digite o nome do seu curso"
+                        value={course1}
+                        onChange={(e) => setCourse1(e.target.value)}
+                        disabled={isSubmitting1}
+                        className={`transition-all h-12 ${
+                          theme === 'light'
+                            ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                            : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                        }`}
+                      />
+                    )}
+                    <Input
+                      type="text"
+                      placeholder="Qual período você está cursando?"
+                      value={period1}
+                      onChange={(e) => setPeriod1(e.target.value)}
                       disabled={isSubmitting1}
                       className={`transition-all h-12 ${
                         theme === 'light'
@@ -724,6 +883,64 @@ export default function SynapseAILanding() {
                   value={whatsapp2}
                   onChange={handleWhatsAppChange2}
                   maxLength={13}
+                  disabled={isSubmitting2}
+                  className={`transition-all h-12 ${
+                    theme === 'light'
+                      ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                      : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                  }`}
+                />
+                <select
+                  value={campus2}
+                  onChange={handleCampusChange2}
+                  disabled={isSubmitting2}
+                  className={`transition-all h-12 w-full rounded-md border px-3 py-1 text-base shadow-xs outline-none ${
+                    theme === 'light'
+                      ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                      : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                  }`}
+                >
+                  <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione seu campus</option>
+                  {campusOptions.map((campus) => (
+                    <option key={campus} value={campus} className={theme === 'light' ? 'text-gray-900' : 'text-white'}>{campus}</option>
+                  ))}
+                </select>
+                {campus2 && (
+                  <select
+                    value={course2}
+                    onChange={(e) => setCourse2(e.target.value)}
+                    disabled={isSubmitting2}
+                    className={`transition-all h-12 w-full rounded-md border px-3 py-1 text-base shadow-xs outline-none ${
+                      theme === 'light'
+                        ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                        : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                    }`}
+                  >
+                    <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione seu curso</option>
+                    {coursesByCampus[campus2]?.map((course) => (
+                      <option key={course} value={course} className={theme === 'light' ? 'text-gray-900' : 'text-white'}>{course}</option>
+                    ))}
+                  </select>
+                )}
+                {course2 === 'Outro' && (
+                  <Input
+                    type="text"
+                    placeholder="Digite o nome do seu curso"
+                    value={course2}
+                    onChange={(e) => setCourse2(e.target.value)}
+                    disabled={isSubmitting2}
+                    className={`transition-all h-12 ${
+                      theme === 'light'
+                        ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                        : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                    }`}
+                  />
+                )}
+                <Input
+                  type="text"
+                  placeholder="Qual período você está cursando?"
+                  value={period2}
+                  onChange={(e) => setPeriod2(e.target.value)}
                   disabled={isSubmitting2}
                   className={`transition-all h-12 ${
                     theme === 'light'

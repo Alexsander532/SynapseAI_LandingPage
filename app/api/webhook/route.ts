@@ -4,6 +4,9 @@ interface FormData {
   name: string
   email: string
   whatsapp: string
+  campus: string
+  course: string
+  period: string
   formType: 'waitlist' | 'notification'
   timestamp: string
 }
@@ -11,10 +14,10 @@ interface FormData {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, whatsapp, formType } = body
+    const { name, email, whatsapp, campus, course, period, formType } = body
 
     // Validação básica dos dados
-    if (!name || !email || !whatsapp) {
+    if (!name || !email || !whatsapp || !campus || !course || !period) {
       return NextResponse.json(
         { error: 'Todos os campos são obrigatórios' },
         { status: 400 }
@@ -44,6 +47,9 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       whatsapp: whatsapp.trim(),
+      campus: campus.trim(),
+      course: course.trim(),
+      period: period.trim(),
       formType: formType || 'waitlist',
       timestamp: new Date().toISOString()
     }
@@ -79,6 +85,10 @@ export async function POST(request: NextRequest) {
     console.log('Dados enviados para n8n:', {
       name: webhookData.name,
       email: webhookData.email,
+      whatsapp: webhookData.whatsapp,
+      campus: webhookData.campus,
+      course: webhookData.course,
+      period: webhookData.period,
       formType: webhookData.formType,
       timestamp: webhookData.timestamp
     })
