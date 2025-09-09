@@ -4,9 +4,11 @@ interface FormData {
   name: string
   email: string
   whatsapp: string
+  institution: string
   campus: string
   course: string
   period: string
+  customInstitution: string
   formType: 'waitlist' | 'notification'
   timestamp: string
 }
@@ -14,14 +16,31 @@ interface FormData {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, whatsapp, campus, course, period, formType } = body
+    const { name, email, whatsapp, institution, campus, course, period, customInstitution, formType } = body
 
     // Validação básica dos dados
-    if (!name || !email || !whatsapp || !campus || !course || !period) {
+    if (!name || !email || !whatsapp || !institution) {
       return NextResponse.json(
-        { error: 'Todos os campos são obrigatórios' },
+        { error: 'Nome, email, WhatsApp e instituição são obrigatórios' },
         { status: 400 }
       )
+    }
+
+    // Validação condicional baseada na instituição
+    if (institution === 'CEFET-MG') {
+      if (!campus || !course || !period) {
+        return NextResponse.json(
+          { error: 'Campus, curso e período são obrigatórios para CEFET-MG' },
+          { status: 400 }
+        )
+      }
+    } else if (institution === 'Outra') {
+      if (!customInstitution || !course || !period) {
+        return NextResponse.json(
+          { error: 'Nome da instituição, curso e período são obrigatórios' },
+          { status: 400 }
+        )
+      }
     }
 
     // Validação de email
@@ -47,9 +66,11 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       whatsapp: whatsapp.trim(),
-      campus: campus.trim(),
-      course: course.trim(),
-      period: period.trim(),
+      institution: institution.trim(),
+      campus: campus ? campus.trim() : '',
+      course: course ? course.trim() : '',
+      period: period ? period.trim() : '',
+      customInstitution: customInstitution ? customInstitution.trim() : '',
       formType: formType || 'waitlist',
       timestamp: new Date().toISOString()
     }
@@ -86,9 +107,11 @@ export async function POST(request: NextRequest) {
       name: webhookData.name,
       email: webhookData.email,
       whatsapp: webhookData.whatsapp,
+      institution: webhookData.institution,
       campus: webhookData.campus,
       course: webhookData.course,
       period: webhookData.period,
+      customInstitution: webhookData.customInstitution,
       formType: webhookData.formType,
       timestamp: webhookData.timestamp
     })

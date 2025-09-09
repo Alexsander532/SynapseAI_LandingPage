@@ -89,18 +89,29 @@ export default function SynapseAILanding() {
       'Outro'
     ]
   }
+  // Estados do primeiro formulário
   const [name1, setName1] = useState('')
   const [email1, setEmail1] = useState('')
   const [whatsapp1, setWhatsapp1] = useState('')
+  const [institution1, setInstitution1] = useState('')
   const [campus1, setCampus1] = useState('')
   const [course1, setCourse1] = useState('')
   const [period1, setPeriod1] = useState('')
+  const [customInstitution1, setCustomInstitution1] = useState('')
+  const [customCourse1, setCustomCourse1] = useState('')
+  const [customPeriod1, setCustomPeriod1] = useState('')
+  
+  // Estados do segundo formulário
   const [name2, setName2] = useState('')
   const [email2, setEmail2] = useState('')
   const [whatsapp2, setWhatsapp2] = useState('')
+  const [institution2, setInstitution2] = useState('')
   const [campus2, setCampus2] = useState('')
   const [course2, setCourse2] = useState('')
   const [period2, setPeriod2] = useState('')
+  const [customInstitution2, setCustomInstitution2] = useState('')
+  const [customCourse2, setCustomCourse2] = useState('')
+  const [customPeriod2, setCustomPeriod2] = useState('')
   const [isSubmitting1, setIsSubmitting1] = useState(false)
   const [isSubmitting2, setIsSubmitting2] = useState(false)
   const [submitMessage1, setSubmitMessage1] = useState('')
@@ -179,6 +190,27 @@ export default function SynapseAILanding() {
     setWhatsapp2(formatted)
   }
 
+  // Handlers para instituição - resetar campos quando instituição mudar
+  const handleInstitutionChange1 = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setInstitution1(e.target.value)
+    setCampus1('')
+    setCourse1('')
+    setPeriod1('')
+    setCustomInstitution1('')
+    setCustomCourse1('')
+    setCustomPeriod1('')
+  }
+
+  const handleInstitutionChange2 = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setInstitution2(e.target.value)
+    setCampus2('')
+    setCourse2('')
+    setPeriod2('')
+    setCustomInstitution2('')
+    setCustomCourse2('')
+    setCustomPeriod2('')
+  }
+
   // Handlers para campus - resetar curso quando campus mudar
   const handleCampusChange1 = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setCampus1(e.target.value)
@@ -191,7 +223,19 @@ export default function SynapseAILanding() {
   }
 
   // Função para enviar dados para o webhook
-  const submitToWebhook = async (name: string, email: string, whatsapp: string, campus: string, course: string, period: string, formType: 'waitlist' | 'notification') => {
+  const submitToWebhook = async (
+    name: string, 
+    email: string, 
+    whatsapp: string, 
+    institution: string,
+    campus: string, 
+    course: string, 
+    period: string, 
+    customInstitution: string,
+    customCourse: string,
+    customPeriod: string,
+    formType: 'waitlist' | 'notification'
+  ) => {
     try {
       const response = await fetch('/api/webhook', {
         method: 'POST',
@@ -202,9 +246,11 @@ export default function SynapseAILanding() {
           name,
           email,
           whatsapp,
-          campus,
-          course,
-          period,
+          institution,
+          campus: institution === 'CEFET-MG' ? campus : '',
+          course: institution === 'CEFET-MG' ? course : customCourse,
+          period: institution === 'CEFET-MG' ? period : customPeriod,
+          customInstitution: institution === 'Outra' ? customInstitution : '',
           formType
         })
       })
@@ -229,15 +275,31 @@ export default function SynapseAILanding() {
   const handleSubmit1 = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!name1.trim() || !email1.trim() || !whatsapp1.trim() || !campus1.trim() || !course1.trim() || !period1.trim()) {
-      setSubmitMessage1('Por favor, preencha todos os campos')
+    // Validação condicional baseada na instituição
+    if (!name1.trim() || !email1.trim() || !whatsapp1.trim() || !institution1.trim()) {
+      setSubmitMessage1('Por favor, preencha todos os campos obrigatórios')
       return
+    }
+
+    if (institution1 === 'CEFET-MG') {
+      if (!campus1.trim() || !course1.trim() || !period1.trim()) {
+        setSubmitMessage1('Por favor, preencha todos os campos do CEFET-MG')
+        return
+      }
+    } else if (institution1 === 'Outra') {
+      if (!customInstitution1.trim() || !customCourse1.trim() || !customPeriod1.trim()) {
+        setSubmitMessage1('Por favor, preencha todos os campos da instituição')
+        return
+      }
     }
 
     setIsSubmitting1(true)
     setSubmitMessage1('')
 
-    const result = await submitToWebhook(name1, email1, whatsapp1, campus1, course1, period1, 'waitlist')
+    const result = await submitToWebhook(
+      name1, email1, whatsapp1, institution1, campus1, course1, period1,
+      customInstitution1, customCourse1, customPeriod1, 'waitlist'
+    )
     
     if (result.success) {
       setSubmitMessage1('✅ Cadastro realizado com sucesso!')
@@ -245,9 +307,13 @@ export default function SynapseAILanding() {
       setName1('')
       setEmail1('')
       setWhatsapp1('')
+      setInstitution1('')
       setCampus1('')
       setCourse1('')
       setPeriod1('')
+      setCustomInstitution1('')
+      setCustomCourse1('')
+      setCustomPeriod1('')
       
       // Limpar mensagem após 2 segundos
       setTimeout(() => {
@@ -264,15 +330,31 @@ export default function SynapseAILanding() {
   const handleSubmit2 = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!name2.trim() || !email2.trim() || !whatsapp2.trim() || !campus2.trim() || !course2.trim() || !period2.trim()) {
-      setSubmitMessage2('Por favor, preencha todos os campos')
+    // Validação condicional baseada na instituição
+    if (!name2.trim() || !email2.trim() || !whatsapp2.trim() || !institution2.trim()) {
+      setSubmitMessage2('Por favor, preencha todos os campos obrigatórios')
       return
+    }
+
+    if (institution2 === 'CEFET-MG') {
+      if (!campus2.trim() || !course2.trim() || !period2.trim()) {
+        setSubmitMessage2('Por favor, preencha todos os campos do CEFET-MG')
+        return
+      }
+    } else if (institution2 === 'Outra') {
+      if (!customInstitution2.trim() || !customCourse2.trim() || !customPeriod2.trim()) {
+        setSubmitMessage2('Por favor, preencha todos os campos da instituição')
+        return
+      }
     }
 
     setIsSubmitting2(true)
     setSubmitMessage2('')
 
-    const result = await submitToWebhook(name2, email2, whatsapp2, campus2, course2, period2, 'notification')
+    const result = await submitToWebhook(
+      name2, email2, whatsapp2, institution2, campus2, course2, period2,
+      customInstitution2, customCourse2, customPeriod2, 'notification'
+    )
     
     if (result.success) {
       setSubmitMessage2('✅ Cadastro realizado com sucesso!')
@@ -280,9 +362,13 @@ export default function SynapseAILanding() {
       setName2('')
       setEmail2('')
       setWhatsapp2('')
+      setInstitution2('')
       setCampus2('')
       setCourse2('')
       setPeriod2('')
+      setCustomInstitution2('')
+      setCustomCourse2('')
+      setCustomPeriod2('')
       
       // Limpar mensagem após 2 segundos
       setTimeout(() => {
@@ -511,8 +597,8 @@ export default function SynapseAILanding() {
                       }`}
                     />
                     <select
-                      value={campus1}
-                      onChange={handleCampusChange1}
+                      value={institution1}
+                      onChange={handleInstitutionChange1}
                       disabled={isSubmitting1}
                       className={`transition-all h-12 w-full rounded-md border px-3 py-1 text-base shadow-xs outline-none ${
                         theme === 'light'
@@ -520,54 +606,112 @@ export default function SynapseAILanding() {
                           : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
                       }`}
                     >
-                      <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione seu campus</option>
-                      {campusOptions.map((campus) => (
-                        <option key={campus} value={campus} className={theme === 'light' ? 'text-gray-900' : 'text-white'}>{campus}</option>
-                      ))}
+                      <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione sua instituição</option>
+                      <option value="CEFET-MG" className={theme === 'light' ? 'text-gray-900' : 'text-white'}>CEFET-MG</option>
+                      <option value="Outra" className={theme === 'light' ? 'text-gray-900' : 'text-white'}>Outra</option>
                     </select>
-                    {campus1 && (
-                      <select
-                        value={course1}
-                        onChange={(e) => setCourse1(e.target.value)}
-                        disabled={isSubmitting1}
-                        className={`transition-all h-12 w-full rounded-md border px-3 py-1 text-base shadow-xs outline-none ${
-                          theme === 'light'
-                            ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
-                            : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
-                        }`}
-                      >
-                        <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione seu curso</option>
-                        {coursesByCampus[campus1]?.map((course) => (
-                          <option key={course} value={course} className={theme === 'light' ? 'text-gray-900' : 'text-white'}>{course}</option>
-                        ))}
-                      </select>
+                    {institution1 === 'CEFET-MG' && (
+                      <>
+                        <select
+                          value={campus1}
+                          onChange={handleCampusChange1}
+                          disabled={isSubmitting1}
+                          className={`transition-all h-12 w-full rounded-md border px-3 py-1 text-base shadow-xs outline-none ${
+                            theme === 'light'
+                              ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                              : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                          }`}
+                        >
+                          <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione seu campus</option>
+                          {campusOptions.map((campus) => (
+                            <option key={campus} value={campus} className={theme === 'light' ? 'text-gray-900' : 'text-white'}>{campus}</option>
+                          ))}
+                        </select>
+                        {campus1 && (
+                          <select
+                            value={course1}
+                            onChange={(e) => setCourse1(e.target.value)}
+                            disabled={isSubmitting1}
+                            className={`transition-all h-12 w-full rounded-md border px-3 py-1 text-base shadow-xs outline-none ${
+                              theme === 'light'
+                                ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                                : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                            }`}
+                          >
+                            <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione seu curso</option>
+                            {coursesByCampus[campus1]?.map((course) => (
+                              <option key={course} value={course} className={theme === 'light' ? 'text-gray-900' : 'text-white'}>{course}</option>
+                            ))}
+                          </select>
+                        )}
+                        {course1 === 'Outro' && (
+                          <Input
+                            type="text"
+                            placeholder="Digite o nome do seu curso"
+                            value={course1}
+                            onChange={(e) => setCourse1(e.target.value)}
+                            disabled={isSubmitting1}
+                            className={`transition-all h-12 ${
+                              theme === 'light'
+                                ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                                : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                            }`}
+                          />
+                        )}
+                        <Input
+                          type="text"
+                          placeholder="Qual período você está cursando?"
+                          value={period1}
+                          onChange={(e) => setPeriod1(e.target.value)}
+                          disabled={isSubmitting1}
+                          className={`transition-all h-12 ${
+                            theme === 'light'
+                              ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                              : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                          }`}
+                        />
+                      </>
                     )}
-                    {course1 === 'Outro' && (
-                      <Input
-                        type="text"
-                        placeholder="Digite o nome do seu curso"
-                        value={course1}
-                        onChange={(e) => setCourse1(e.target.value)}
-                        disabled={isSubmitting1}
-                        className={`transition-all h-12 ${
-                          theme === 'light'
-                            ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
-                            : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
-                        }`}
-                      />
+                    {institution1 === 'Outra' && (
+                      <>
+                        <Input
+                          type="text"
+                          placeholder="Nome da sua instituição"
+                          value={customInstitution1}
+                          onChange={(e) => setCustomInstitution1(e.target.value)}
+                          disabled={isSubmitting1}
+                          className={`transition-all h-12 ${
+                            theme === 'light'
+                              ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                              : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                          }`}
+                        />
+                        <Input
+                          type="text"
+                          placeholder="Nome do seu curso"
+                          value={customCourse1}
+                          onChange={(e) => setCustomCourse1(e.target.value)}
+                          disabled={isSubmitting1}
+                          className={`transition-all h-12 ${
+                            theme === 'light'
+                              ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                              : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                          }`}
+                        />
+                        <Input
+                          type="text"
+                          placeholder="Qual período você está cursando?"
+                          value={customPeriod1}
+                          onChange={(e) => setCustomPeriod1(e.target.value)}
+                          disabled={isSubmitting1}
+                          className={`transition-all h-12 ${
+                            theme === 'light'
+                              ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                              : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                          }`}
+                        />
+                      </>
                     )}
-                    <Input
-                      type="text"
-                      placeholder="Qual período você está cursando?"
-                      value={period1}
-                      onChange={(e) => setPeriod1(e.target.value)}
-                      disabled={isSubmitting1}
-                      className={`transition-all h-12 ${
-                        theme === 'light'
-                          ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
-                          : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
-                      }`}
-                    />
                     {submitMessage1 && (
                       <div className={`text-sm p-3 rounded-md ${
                         submitMessage1.includes('✅')
@@ -891,8 +1035,8 @@ export default function SynapseAILanding() {
                   }`}
                 />
                 <select
-                  value={campus2}
-                  onChange={handleCampusChange2}
+                  value={institution2}
+                  onChange={handleInstitutionChange2}
                   disabled={isSubmitting2}
                   className={`transition-all h-12 w-full rounded-md border px-3 py-1 text-base shadow-xs outline-none ${
                     theme === 'light'
@@ -900,10 +1044,26 @@ export default function SynapseAILanding() {
                       : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
                   }`}
                 >
-                  <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione seu campus</option>
-                  {campusOptions.map((campus) => (
-                    <option key={campus} value={campus} className={theme === 'light' ? 'text-gray-900' : 'text-white'}>{campus}</option>
-                  ))}
+                  <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione sua instituição</option>
+                  <option value="CEFET-MG" className={theme === 'light' ? 'text-gray-900' : 'text-white'}>CEFET-MG</option>
+                  <option value="Outra" className={theme === 'light' ? 'text-gray-900' : 'text-white'}>Outra</option>
+                </select>
+                {institution2 === 'CEFET-MG' && (
+                  <>
+                    <select
+                      value={campus2}
+                      onChange={handleCampusChange2}
+                      disabled={isSubmitting2}
+                      className={`transition-all h-12 w-full rounded-md border px-3 py-1 text-base shadow-xs outline-none ${
+                        theme === 'light'
+                          ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                          : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                      }`}
+                    >
+                      <option value="" className={theme === 'light' ? 'text-gray-500' : 'text-gray-400'}>Selecione seu campus</option>
+                      {campusOptions.map((campus) => (
+                        <option key={campus} value={campus} className={theme === 'light' ? 'text-gray-900' : 'text-white'}>{campus}</option>
+                      ))}
                 </select>
                 {campus2 && (
                   <select
@@ -936,18 +1096,60 @@ export default function SynapseAILanding() {
                     }`}
                   />
                 )}
-                <Input
-                  type="text"
-                  placeholder="Qual período você está cursando?"
-                  value={period2}
-                  onChange={(e) => setPeriod2(e.target.value)}
-                  disabled={isSubmitting2}
-                  className={`transition-all h-12 ${
-                    theme === 'light'
-                      ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
-                      : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
-                  }`}
-                />
+                    <Input
+                      type="text"
+                      placeholder="Qual período você está cursando?"
+                      value={period2}
+                      onChange={(e) => setPeriod2(e.target.value)}
+                      disabled={isSubmitting2}
+                      className={`transition-all h-12 ${
+                        theme === 'light'
+                          ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                          : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                      }`}
+                    />
+                  </>
+                )}
+                {institution2 === 'Outra' && (
+                  <>
+                    <Input
+                      type="text"
+                      placeholder="Nome da sua instituição"
+                      value={customInstitution2}
+                      onChange={(e) => setCustomInstitution2(e.target.value)}
+                      disabled={isSubmitting2}
+                      className={`transition-all h-12 ${
+                        theme === 'light'
+                          ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                          : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                      }`}
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Nome do seu curso"
+                      value={customCourse2}
+                      onChange={(e) => setCustomCourse2(e.target.value)}
+                      disabled={isSubmitting2}
+                      className={`transition-all h-12 ${
+                        theme === 'light'
+                          ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                          : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                      }`}
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Qual período você está cursando?"
+                      value={customPeriod2}
+                      onChange={(e) => setCustomPeriod2(e.target.value)}
+                      disabled={isSubmitting2}
+                      className={`transition-all h-12 ${
+                        theme === 'light'
+                          ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                          : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                      }`}
+                    />
+                  </>
+                )}
                 {submitMessage2 && (
                   <div className={`text-sm p-3 rounded-md ${
                     submitMessage2.includes('✅')
