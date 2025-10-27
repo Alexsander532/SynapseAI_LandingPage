@@ -127,7 +127,7 @@ export default function SynapseAILanding() {
 
   // Função para calcular tempo restante até o lançamento
   const calculateTimeLeft = () => {
-    const launchDate = new Date('2025-11-07T12:00:00-03:00') // 07/11/2025 às 12:00 (horário de Brasília)
+    const launchDate = new Date('2025-11-10T12:00:00-03:00') // 10/11/2025 às 12:00 (horário de Brasília)
     const now = new Date()
     const difference = launchDate.getTime() - now.getTime()
 
@@ -598,7 +598,7 @@ export default function SynapseAILanding() {
                     ? 'text-gray-600'
                     : 'text-gray-300'
                 }`}>
-                  07 de Novembro de 2025 às 12:00
+                  10 de Novembro de 2025 às 12:00
                 </p>
                 <div className="flex justify-center gap-4">
                   <div className={`text-center p-3 rounded-xl transition-all duration-300 ${
