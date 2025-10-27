@@ -117,8 +117,43 @@ export default function SynapseAILanding() {
   const [submitMessage1, setSubmitMessage1] = useState('')
   const [submitMessage2, setSubmitMessage2] = useState('')
 
+  // Estado do cronômetro de lançamento
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  })
+
+  // Função para calcular tempo restante até o lançamento
+  const calculateTimeLeft = () => {
+    const launchDate = new Date('2025-11-07T12:00:00-03:00') // 07/11/2025 às 12:00 (horário de Brasília)
+    const now = new Date()
+    const difference = launchDate.getTime() - now.getTime()
+
+    if (difference > 0) {
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000)
+
+      return { days, hours, minutes, seconds }
+    }
+
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 }
+  }
+
   useEffect(() => {
     setIsVisible(true)
+    
+    // Inicializar cronômetro
+    setTimeLeft(calculateTimeLeft())
+    
+    // Atualizar cronômetro a cada segundo
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft())
+    }, 1000) // Atualiza a cada segundo
+    
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
@@ -128,6 +163,7 @@ export default function SynapseAILanding() {
     document.documentElement.style.scrollBehavior = 'smooth'
     
     return () => {
+      clearInterval(timer)
       window.removeEventListener("mousemove", handleMouseMove)
       document.documentElement.style.scrollBehavior = 'auto'
     }
@@ -388,24 +424,24 @@ export default function SynapseAILanding() {
         : 'bg-gray-900'
     }`}>
       {/* Header fixo com logo e navegação */}
-      <header className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b transition-all duration-300 ${
+      <header className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b transition-all duration-300 shadow-sm ${
         theme === 'light' 
-          ? 'bg-white/80 border-gray-200' 
-          : 'bg-gray-900/80 border-gray-800'
+          ? 'bg-white/90 border-gray-200/50' 
+          : 'bg-gray-900/90 border-gray-700/50'
       }`}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
+          <div className="flex items-center justify-between py-2.5">
             <img 
               src="/logo-synapse-ai.png" 
               alt="SynapseAI Logo" 
-              className="h-16 md:h-20 lg:h-24 w-auto hover:scale-105 transition-transform duration-300"
+              className="h-10 md:h-12 w-auto hover:scale-105 transition-transform duration-300"
             />
             
             {/* Menu de Navegação */}
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className="hidden md:flex items-center space-x-6">
               <button 
                 onClick={() => scrollToSection('inicio')}
-                className={`transition-colors duration-300 font-medium hover:scale-105 transform cursor-pointer ${
+                className={`transition-all duration-300 font-medium hover:scale-105 transform cursor-pointer text-sm ${
                   theme === 'light'
                     ? 'text-gray-700 hover:text-blue-600'
                     : 'text-gray-300 hover:text-blue-400'
@@ -415,7 +451,7 @@ export default function SynapseAILanding() {
               </button>
               <button 
                 onClick={() => scrollToSection('beneficios')}
-                className={`transition-colors duration-300 font-medium hover:scale-105 transform cursor-pointer ${
+                className={`transition-all duration-300 font-medium hover:scale-105 transform cursor-pointer text-sm ${
                   theme === 'light'
                     ? 'text-gray-700 hover:text-blue-600'
                     : 'text-gray-300 hover:text-blue-400'
@@ -425,7 +461,7 @@ export default function SynapseAILanding() {
               </button>
               <button 
                 onClick={() => scrollToSection('funcionalidades')}
-                className={`transition-colors duration-300 font-medium hover:scale-105 transform cursor-pointer ${
+                className={`transition-all duration-300 font-medium hover:scale-105 transform cursor-pointer text-sm ${
                   theme === 'light'
                     ? 'text-gray-700 hover:text-blue-600'
                     : 'text-gray-300 hover:text-blue-400'
@@ -456,38 +492,38 @@ export default function SynapseAILanding() {
           
           {/* Menu Mobile Dropdown */}
           {isMobileMenuOpen && (
-            <div className={`md:hidden backdrop-blur-sm border-t transition-colors ${
+            <div className={`md:hidden backdrop-blur-md border-t transition-all duration-300 ${
               theme === 'light'
-                ? 'bg-white/95 border-gray-200'
-                : 'bg-gray-900/95 border-gray-800'
+                ? 'bg-white/95 border-gray-200/50'
+                : 'bg-gray-900/95 border-gray-700/50'
             }`}>
-              <nav className="px-4 py-4 space-y-4">
+              <nav className="px-4 py-3 space-y-2">
                 <button 
                   onClick={() => scrollToSection('inicio')}
-                  className={`block w-full text-left transition-colors duration-300 font-medium py-2 ${
+                  className={`block w-full text-left transition-all duration-300 font-medium py-2 px-2 rounded-md text-sm ${
                     theme === 'light'
-                      ? 'text-gray-700 hover:text-blue-600'
-                      : 'text-gray-300 hover:text-blue-400'
+                      ? 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                      : 'text-gray-300 hover:text-blue-400 hover:bg-gray-800'
                   }`}
                 >
                   Início
                 </button>
                 <button 
                   onClick={() => scrollToSection('beneficios')}
-                  className={`block w-full text-left transition-colors duration-300 font-medium py-2 ${
+                  className={`block w-full text-left transition-all duration-300 font-medium py-2 px-2 rounded-md text-sm ${
                     theme === 'light'
-                      ? 'text-gray-700 hover:text-blue-600'
-                      : 'text-gray-300 hover:text-blue-400'
+                      ? 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                      : 'text-gray-300 hover:text-blue-400 hover:bg-gray-800'
                   }`}
                 >
                   Benefícios
                 </button>
                 <button 
                   onClick={() => scrollToSection('funcionalidades')}
-                  className={`block w-full text-left transition-colors duration-300 font-medium py-2 ${
+                  className={`block w-full text-left transition-all duration-300 font-medium py-2 px-2 rounded-md text-sm ${
                     theme === 'light'
-                      ? 'text-gray-700 hover:text-blue-600'
-                      : 'text-gray-300 hover:text-blue-400'
+                      ? 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                      : 'text-gray-300 hover:text-blue-400 hover:bg-gray-800'
                   }`}
                 >
                   Funcionalidades
@@ -542,6 +578,112 @@ export default function SynapseAILanding() {
               Gerencie disciplinas, prazos, provas, anotações e estude de forma mais inteligente com ferramentas
               alimentadas por IA, projetadas especificamente para estudantes universitários.
             </p>
+
+            {/* Cronômetro de Lançamento */}
+            <div className={`mx-auto mt-10 max-w-lg p-6 rounded-2xl border-2 shadow-lg transition-all duration-300 ${
+              theme === 'light'
+                ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
+                : 'bg-gradient-to-br from-gray-800 to-gray-900 border-blue-800'
+            }`}>
+              <div className="text-center">
+                <h3 className={`text-lg font-semibold mb-2 transition-colors duration-300 ${
+                  theme === 'light'
+                    ? 'text-gray-900'
+                    : 'text-white'
+                }`}>
+                  🚀 Lançamento em:
+                </h3>
+                <p className={`text-sm mb-4 transition-colors duration-300 ${
+                  theme === 'light'
+                    ? 'text-gray-600'
+                    : 'text-gray-300'
+                }`}>
+                  07 de Novembro de 2025 às 12:00
+                </p>
+                <div className="flex justify-center gap-4">
+                  <div className={`text-center p-3 rounded-xl transition-all duration-300 ${
+                    theme === 'light'
+                      ? 'bg-white shadow-md'
+                      : 'bg-gray-700 shadow-lg'
+                  }`}>
+                    <div className={`text-2xl font-bold transition-colors duration-300 ${
+                      theme === 'light'
+                        ? 'text-blue-600'
+                        : 'text-blue-400'
+                    }`}>
+                      {timeLeft.days}
+                    </div>
+                    <div className={`text-xs font-medium transition-colors duration-300 ${
+                      theme === 'light'
+                        ? 'text-gray-500'
+                        : 'text-gray-400'
+                    }`}>
+                      DIAS
+                    </div>
+                  </div>
+                  <div className={`text-center p-3 rounded-xl transition-all duration-300 ${
+                    theme === 'light'
+                      ? 'bg-white shadow-md'
+                      : 'bg-gray-700 shadow-lg'
+                  }`}>
+                    <div className={`text-2xl font-bold transition-colors duration-300 ${
+                      theme === 'light'
+                        ? 'text-blue-600'
+                        : 'text-blue-400'
+                    }`}>
+                      {timeLeft.hours}
+                    </div>
+                    <div className={`text-xs font-medium transition-colors duration-300 ${
+                      theme === 'light'
+                        ? 'text-gray-500'
+                        : 'text-gray-400'
+                    }`}>
+                      HORAS
+                    </div>
+                  </div>
+                  <div className={`text-center p-3 rounded-xl transition-all duration-300 ${
+                    theme === 'light'
+                      ? 'bg-white shadow-md'
+                      : 'bg-gray-700 shadow-lg'
+                  }`}>
+                    <div className={`text-2xl font-bold transition-colors duration-300 ${
+                      theme === 'light'
+                        ? 'text-blue-600'
+                        : 'text-blue-400'
+                    }`}>
+                      {timeLeft.minutes}
+                    </div>
+                    <div className={`text-xs font-medium transition-colors duration-300 ${
+                      theme === 'light'
+                        ? 'text-gray-500'
+                        : 'text-gray-400'
+                    }`}>
+                      MINUTOS
+                    </div>
+                  </div>
+                  <div className={`text-center p-3 rounded-xl transition-all duration-300 ${
+                    theme === 'light'
+                      ? 'bg-white shadow-md'
+                      : 'bg-gray-700 shadow-lg'
+                  }`}>
+                    <div className={`text-2xl font-bold transition-colors duration-300 ${
+                      theme === 'light'
+                        ? 'text-blue-600'
+                        : 'text-blue-400'
+                    }`}>
+                      {timeLeft.seconds}
+                    </div>
+                    <div className={`text-xs font-medium transition-colors duration-300 ${
+                      theme === 'light'
+                        ? 'text-gray-500'
+                        : 'text-gray-400'
+                    }`}>
+                      SEGUNDOS
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className="mx-auto mt-12 max-w-md">
               <Card className={`border-2 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 ${
@@ -918,8 +1060,7 @@ export default function SynapseAILanding() {
                   <div>
                     <h3 className={`font-semibold mb-2 text-lg transition-colors duration-300 ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Configuração de Currículo e Horários</h3>
                     <p className={`leading-relaxed transition-colors duration-300 ${theme === 'light' ? 'text-gray-600' : 'text-gray-300'}`}>
-                      Insira facilmente suas disciplinas, horários de aula e calendário acadêmico para organização
-                      completa.
+                      Insira facilmente suas disciplinas, horários de aula, calendário acadêmico e organize sua grade curricular para uma gestão completa dos seus estudos.
                     </p>
                   </div>
                 </div>
