@@ -365,21 +365,34 @@ export default function SynapseAILanding() {
   // Handler para o primeiro formulário (Lista de Espera)
   const handleSubmit1 = async (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation() // Prevenir propagação do evento
     
     // Validação condicional baseada na instituição
     if (!name1.trim() || !email1.trim() || !whatsapp1.trim() || !institution1.trim()) {
       setSubmitMessage1('Por favor, preencha todos os campos obrigatórios')
+      // Limpar mensagem de erro após 10 segundos
+      setTimeout(() => {
+        setSubmitMessage1('')
+      }, 10000)
       return
     }
 
     if (institution1 === 'CEFET-MG') {
       if (!campus1.trim() || !course1.trim() || !period1.trim()) {
         setSubmitMessage1('Por favor, preencha todos os campos do CEFET-MG')
+        // Limpar mensagem de erro após 10 segundos
+        setTimeout(() => {
+          setSubmitMessage1('')
+        }, 10000)
         return
       }
     } else if (institution1 === 'Outra') {
       if (!customInstitution1.trim() || !customCourse1.trim() || !customPeriod1.trim()) {
         setSubmitMessage1('Por favor, preencha todos os campos da instituição')
+        // Limpar mensagem de erro após 10 segundos
+        setTimeout(() => {
+          setSubmitMessage1('')
+        }, 10000)
         return
       }
     }
@@ -387,6 +400,10 @@ export default function SynapseAILanding() {
     // Validação das dores - pelo menos uma deve ser selecionada
     if (painPoints1.length === 0 && customPainPoint1.trim() === '') {
       setSubmitMessage1('Por favor, selecione pelo menos uma dor que você gostaria que fosse resolvida')
+      // Limpar mensagem de erro após 10 segundos
+      setTimeout(() => {
+        setSubmitMessage1('')
+      }, 10000)
       return
     }
 
@@ -424,12 +441,16 @@ export default function SynapseAILanding() {
       setPainPoints1([])
       setCustomPainPoint1('')
       
-      // Limpar mensagem após 2 segundos
+      // Limpar mensagem após 10 segundos
       setTimeout(() => {
         setSubmitMessage1('')
-      }, 2000)
+      }, 10000)
     } else {
       setSubmitMessage1(`❌ ${result.message}`)
+      // Limpar mensagem de erro após 10 segundos
+      setTimeout(() => {
+        setSubmitMessage1('')
+      }, 10000)
     }
 
     setIsSubmitting1(false)
@@ -438,21 +459,34 @@ export default function SynapseAILanding() {
   // Handler para o segundo formulário (Notificação)
   const handleSubmit2 = async (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation() // Prevenir propagação do evento
     
     // Validação condicional baseada na instituição
     if (!name2.trim() || !email2.trim() || !whatsapp2.trim() || !institution2.trim()) {
       setSubmitMessage2('Por favor, preencha todos os campos obrigatórios')
+      // Limpar mensagem de erro após 10 segundos
+      setTimeout(() => {
+        setSubmitMessage2('')
+      }, 10000)
       return
     }
 
     if (institution2 === 'CEFET-MG') {
       if (!campus2.trim() || !course2.trim() || !period2.trim()) {
         setSubmitMessage2('Por favor, preencha todos os campos do CEFET-MG')
+        // Limpar mensagem de erro após 10 segundos
+        setTimeout(() => {
+          setSubmitMessage2('')
+        }, 10000)
         return
       }
     } else if (institution2 === 'Outra') {
       if (!customInstitution2.trim() || !customCourse2.trim() || !customPeriod2.trim()) {
         setSubmitMessage2('Por favor, preencha todos os campos da instituição')
+        // Limpar mensagem de erro após 10 segundos
+        setTimeout(() => {
+          setSubmitMessage2('')
+        }, 10000)
         return
       }
     }
@@ -460,6 +494,10 @@ export default function SynapseAILanding() {
     // Validação das dores - pelo menos uma deve ser selecionada
     if (painPoints2.length === 0 && customPainPoint2.trim() === '') {
       setSubmitMessage2('Por favor, selecione pelo menos uma dor que você gostaria que fosse resolvida')
+      // Limpar mensagem de erro após 10 segundos
+      setTimeout(() => {
+        setSubmitMessage2('')
+      }, 10000)
       return
     }
 
@@ -488,12 +526,16 @@ export default function SynapseAILanding() {
       setPainPoints2([])
       setCustomPainPoint2('')
       
-      // Limpar mensagem após 2 segundos
+      // Limpar mensagem após 10 segundos
       setTimeout(() => {
         setSubmitMessage2('')
-      }, 2000)
+      }, 10000)
     } else {
       setSubmitMessage2(`❌ ${result.message}`)
+      // Limpar mensagem de erro após 10 segundos
+      setTimeout(() => {
+        setSubmitMessage2('')
+      }, 10000)
     }
 
     setIsSubmitting2(false)
