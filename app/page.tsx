@@ -101,6 +101,10 @@ export default function SynapseAILanding() {
   const [customCourse1, setCustomCourse1] = useState('')
   const [customPeriod1, setCustomPeriod1] = useState('')
   
+  // Estados das dores do primeiro formulário
+  const [painPoints1, setPainPoints1] = useState<string[]>([])
+  const [customPainPoint1, setCustomPainPoint1] = useState('')
+  
   // Estados do segundo formulário
   const [name2, setName2] = useState('')
   const [email2, setEmail2] = useState('')
@@ -112,6 +116,10 @@ export default function SynapseAILanding() {
   const [customInstitution2, setCustomInstitution2] = useState('')
   const [customCourse2, setCustomCourse2] = useState('')
   const [customPeriod2, setCustomPeriod2] = useState('')
+  
+  // Estados das dores do segundo formulário
+  const [painPoints2, setPainPoints2] = useState<string[]>([])
+  const [customPainPoint2, setCustomPainPoint2] = useState('')
   const [isSubmitting1, setIsSubmitting1] = useState(false)
   const [isSubmitting2, setIsSubmitting2] = useState(false)
   const [submitMessage1, setSubmitMessage1] = useState('')
@@ -125,7 +133,47 @@ export default function SynapseAILanding() {
     seconds: 0
   })
 
-  // Função para calcular tempo restante até o lançamento
+  // Estado da barra de progresso dos 100 primeiros inscritos
+  const [subscriberCount, setSubscriberCount] = useState(0)
+
+  // Função para calcular número de inscritos baseado na data
+  const calculateSubscriberCount = () => {
+    // Data de início da campanha (hoje)
+    const startDate = new Date()
+    startDate.setHours(0, 0, 0, 0) // Começar no início do dia de hoje
+    
+    const launchDate = new Date('2025-11-10T12:00:00-03:00')
+    const now = new Date()
+    
+    const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    const totalDaysUntilLaunch = Math.floor((launchDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    
+    // Começar com 10 inscritos hoje e crescer até 97 no lançamento (deixando 3 vagas)
+    const initialCount = 10
+    const maxOrganicCount = 97 // 100 - 3 vagas restantes
+    
+    let baseCount = initialCount
+    
+    if (daysSinceStart > 0 && totalDaysUntilLaunch > 0) {
+      // Crescimento gradual e proporcional ao tempo até o lançamento
+      const progressRatio = daysSinceStart / totalDaysUntilLaunch
+      const growthAmount = maxOrganicCount - initialCount
+      
+      // Curva de crescimento não-linear (mais lento no início, acelerando depois)
+      const growthCurve = Math.pow(progressRatio, 0.8)
+      baseCount = initialCount + Math.floor(growthAmount * growthCurve)
+      
+      // Adicionar um pouco de variação aleatória para parecer mais natural
+      const randomVariation = Math.floor(Math.random() * 2)
+      baseCount = Math.min(maxOrganicCount, baseCount + randomVariation)
+    }
+    
+    // Verificar se há inscritos adicionais salvos no localStorage
+    const additionalSubscribers = parseInt(localStorage.getItem('additionalSubscribers') || '0')
+    
+    // Garantir que não passe de 100
+    return Math.min(100, baseCount + additionalSubscribers)
+  }
   const calculateTimeLeft = () => {
     const launchDate = new Date('2025-11-10T12:00:00-03:00') // 10/11/2025 às 12:00 (horário de Brasília)
     const now = new Date()
@@ -148,6 +196,9 @@ export default function SynapseAILanding() {
     
     // Inicializar cronômetro
     setTimeLeft(calculateTimeLeft())
+    
+    // Inicializar contador de inscritos
+    setSubscriberCount(calculateSubscriberCount())
     
     // Atualizar cronômetro a cada segundo
     const timer = setInterval(() => {
@@ -270,7 +321,9 @@ export default function SynapseAILanding() {
     customInstitution: string,
     customCourse: string,
     customPeriod: string,
-    formType: 'waitlist' | 'notification'
+    formType: 'waitlist' | 'notification',
+    painPoints: string[],
+    customPainPoint: string
   ) => {
     try {
       const response = await fetch('/api/webhook', {
@@ -287,7 +340,9 @@ export default function SynapseAILanding() {
           course: institution === 'CEFET-MG' ? course : customCourse,
           period: institution === 'CEFET-MG' ? period : customPeriod,
           customInstitution: institution === 'Outra' ? customInstitution : '',
-          formType
+          formType,
+          painPoints,
+          customPainPoint
         })
       })
 
@@ -329,16 +384,32 @@ export default function SynapseAILanding() {
       }
     }
 
+    // Validação das dores - pelo menos uma deve ser selecionada
+    if (painPoints1.length === 0 && customPainPoint1.trim() === '') {
+      setSubmitMessage1('Por favor, selecione pelo menos uma dor que você gostaria que fosse resolvida')
+      return
+    }
+
     setIsSubmitting1(true)
     setSubmitMessage1('')
 
     const result = await submitToWebhook(
       name1, email1, whatsapp1, institution1, campus1, course1, period1,
-      customInstitution1, customCourse1, customPeriod1, 'waitlist'
+      customInstitution1, customCourse1, customPeriod1, 'waitlist',
+      painPoints1, customPainPoint1
     )
     
     if (result.success) {
       setSubmitMessage1('✅ Cadastro realizado com sucesso!')
+      
+      // Incrementar contador de inscritos e salvar no localStorage
+      const currentAdditional = parseInt(localStorage.getItem('additionalSubscribers') || '0')
+      const newAdditional = currentAdditional + 1
+      localStorage.setItem('additionalSubscribers', newAdditional.toString())
+      
+      // Atualizar o contador na interface
+      setSubscriberCount(calculateSubscriberCount())
+      
       // Limpar formulário
       setName1('')
       setEmail1('')
@@ -350,6 +421,8 @@ export default function SynapseAILanding() {
       setCustomInstitution1('')
       setCustomCourse1('')
       setCustomPeriod1('')
+      setPainPoints1([])
+      setCustomPainPoint1('')
       
       // Limpar mensagem após 2 segundos
       setTimeout(() => {
@@ -384,12 +457,19 @@ export default function SynapseAILanding() {
       }
     }
 
+    // Validação das dores - pelo menos uma deve ser selecionada
+    if (painPoints2.length === 0 && customPainPoint2.trim() === '') {
+      setSubmitMessage2('Por favor, selecione pelo menos uma dor que você gostaria que fosse resolvida')
+      return
+    }
+
     setIsSubmitting2(true)
     setSubmitMessage2('')
 
     const result = await submitToWebhook(
       name2, email2, whatsapp2, institution2, campus2, course2, period2,
-      customInstitution2, customCourse2, customPeriod2, 'notification'
+      customInstitution2, customCourse2, customPeriod2, 'notification',
+      painPoints2, customPainPoint2
     )
     
     if (result.success) {
@@ -405,6 +485,8 @@ export default function SynapseAILanding() {
       setCustomInstitution2('')
       setCustomCourse2('')
       setCustomPeriod2('')
+      setPainPoints2([])
+      setCustomPainPoint2('')
       
       // Limpar mensagem após 2 segundos
       setTimeout(() => {
@@ -700,6 +782,63 @@ export default function SynapseAILanding() {
                         : 'text-white'
                     }`}>Entre na Lista de Espera</h3>
                   </div>
+
+                  {/* Barra de Progresso dos 100 Primeiros */}
+                  <div className={`mb-8 p-6 rounded-xl border-2 transition-all duration-300 ${
+                    theme === 'light'
+                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+                      : 'bg-gradient-to-r from-gray-800 to-gray-900 border-blue-800'
+                  }`}>
+                    <div className="text-center mb-4">
+                      <h4 className={`text-lg font-bold mb-2 transition-colors duration-300 ${
+                        theme === 'light'
+                          ? 'text-gray-900'
+                          : 'text-white'
+                      }`}>
+                        🎯 Primeiros 100 Inscritos
+                      </h4>
+                      <p className={`text-sm transition-colors duration-300 ${
+                        theme === 'light'
+                          ? 'text-gray-600'
+                          : 'text-gray-300'
+                      }`}>
+                        Ganhe <strong>1 mês GRATUITO</strong> para testar todas as funcionalidades!
+                      </p>
+                    </div>
+                    
+                    <div className="relative">
+                      <div className={`w-full h-4 rounded-full overflow-hidden transition-all duration-300 ${
+                        theme === 'light'
+                          ? 'bg-gray-200'
+                          : 'bg-gray-700'
+                      }`}>
+                        <div 
+                          className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-1000 ease-out relative overflow-hidden"
+                          style={{ width: `${subscriberCount}%` }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center mt-3">
+                        <span className={`text-sm font-medium transition-colors duration-300 ${
+                          theme === 'light'
+                            ? 'text-gray-600'
+                            : 'text-gray-300'
+                        }`}>
+                          {subscriberCount}/100 inscritos
+                        </span>
+                        <span className={`text-sm font-bold transition-colors duration-300 ${
+                          subscriberCount >= 100 
+                            ? 'text-red-500' 
+                            : theme === 'light'
+                              ? 'text-blue-600'
+                              : 'text-blue-400'
+                        }`}>
+                          {subscriberCount >= 100 ? 'Esgotado!' : `${100 - subscriberCount} vagas restantes`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                   <form className="space-y-4" onSubmit={handleSubmit1}>
                     <Input
                       type="text"
@@ -854,6 +993,127 @@ export default function SynapseAILanding() {
                         />
                       </>
                     )}
+                    
+                    {/* Campo de Dores - aparece quando uma instituição é selecionada */}
+                    {institution1 && (
+                      <div className={`p-6 rounded-xl border-2 transition-all duration-300 shadow-sm ${
+                        theme === 'light'
+                          ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-300'
+                          : 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-600 hover:border-gray-500'
+                      }`}>
+                        <div className="mb-6">
+                          <h4 className={`text-xl font-bold mb-2 transition-colors duration-300 ${
+                            theme === 'light'
+                              ? 'text-gray-900'
+                              : 'text-white'
+                          }`}>
+                            Quais as duas principais dores que você gostaria que fossem resolvidas?
+                          </h4>
+                          <p className={`text-sm transition-colors duration-300 ${
+                            theme === 'light'
+                              ? 'text-gray-600'
+                              : 'text-gray-400'
+                          }`}>
+                            Selecione uma ou mais opções:
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          {[
+                            'Maior organização das minhas anotações e dos conteúdos dos professores',
+                            'Controle das datas de trabalhos e provas',
+                            'Planejamento e acompanhamento da grade curricular do curso',
+                            'Muita matéria acumulada antes da prova'
+                          ].map((painPoint, index) => (
+                            <label key={index} className={`flex items-start space-x-4 cursor-pointer group p-3 rounded-lg transition-all duration-200 ${
+                              theme === 'light'
+                                ? 'hover:bg-white/70 hover:shadow-sm'
+                                : 'hover:bg-gray-700/50'
+                            }`}>
+                              <input
+                                type="checkbox"
+                                checked={painPoints1.includes(painPoint)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setPainPoints1([...painPoints1, painPoint]);
+                                  } else {
+                                    setPainPoints1(painPoints1.filter(p => p !== painPoint));
+                                  }
+                                }}
+                                disabled={isSubmitting1}
+                                className={`mt-0.5 w-5 h-5 rounded-md border-2 transition-all duration-200 ${
+                                  theme === 'light'
+                                    ? 'border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 hover:border-blue-400'
+                                    : 'border-gray-500 text-blue-500 focus:ring-blue-400 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 bg-gray-700 hover:border-blue-400'
+                                }`}
+                              />
+                              <span className={`text-sm leading-relaxed transition-colors duration-300 font-medium ${
+                                painPoints1.includes(painPoint)
+                                  ? theme === 'light'
+                                    ? 'text-blue-700'
+                                    : 'text-blue-300'
+                                  : theme === 'light'
+                                    ? 'text-gray-700 group-hover:text-blue-600'
+                                    : 'text-gray-300 group-hover:text-blue-400'
+                              }`}>
+                                {painPoint}
+                              </span>
+                            </label>
+                          ))}
+                          
+                          {/* Opção "Outro" */}
+                          <label className={`flex items-start space-x-4 cursor-pointer group p-3 rounded-lg transition-all duration-200 ${
+                            theme === 'light'
+                              ? 'hover:bg-white/70 hover:shadow-sm'
+                              : 'hover:bg-gray-700/50'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={customPainPoint1.length > 0}
+                              onChange={(e) => {
+                                if (!e.target.checked) {
+                                  setCustomPainPoint1('');
+                                }
+                              }}
+                              disabled={isSubmitting1}
+                              className={`mt-0.5 w-5 h-5 rounded-md border-2 transition-all duration-200 ${
+                                theme === 'light'
+                                  ? 'border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 hover:border-blue-400'
+                                  : 'border-gray-500 text-blue-500 focus:ring-blue-400 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 bg-gray-700 hover:border-blue-400'
+                              }`}
+                            />
+                            <span className={`text-sm leading-relaxed transition-colors duration-300 font-medium ${
+                              customPainPoint1.length > 0
+                                ? theme === 'light'
+                                  ? 'text-blue-700'
+                                  : 'text-blue-300'
+                                : theme === 'light'
+                                  ? 'text-gray-700 group-hover:text-blue-600'
+                                  : 'text-gray-300 group-hover:text-blue-400'
+                            }`}>
+                              Outro
+                            </span>
+                          </label>
+                          
+                          {/* Campo de texto para "Outro" */}
+                          <div className="mt-3">
+                            <Input
+                              type="text"
+                              placeholder="Descreva suas principais dores..."
+                              value={customPainPoint1}
+                              onChange={(e) => setCustomPainPoint1(e.target.value)}
+                              disabled={isSubmitting1}
+                              className={`transition-all h-12 ${
+                                theme === 'light'
+                                  ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                                  : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     {submitMessage1 && (
                       <div className={`text-sm p-3 rounded-md ${
                         submitMessage1.includes('✅')
@@ -1291,6 +1551,127 @@ export default function SynapseAILanding() {
                     />
                   </>
                 )}
+                
+                {/* Campo de Dores - aparece quando uma instituição é selecionada */}
+                {institution2 && (
+                  <div className={`p-6 rounded-xl border-2 transition-all duration-300 shadow-sm ${
+                    theme === 'light'
+                      ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-300'
+                      : 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-600 hover:border-gray-500'
+                  }`}>
+                    <div className="mb-6">
+                      <h4 className={`text-xl font-bold mb-2 transition-colors duration-300 ${
+                        theme === 'light'
+                          ? 'text-gray-900'
+                          : 'text-white'
+                      }`}>
+                        Quais as duas principais dores que você gostaria que fossem resolvidas?
+                      </h4>
+                      <p className={`text-sm transition-colors duration-300 ${
+                        theme === 'light'
+                          ? 'text-gray-600'
+                          : 'text-gray-400'
+                      }`}>
+                        Selecione uma ou mais opções:
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {[
+                        'Maior organização das minhas anotações e dos conteúdos dos professores',
+                        'Controle das datas de trabalhos e provas',
+                        'Planejamento e acompanhamento da grade curricular do curso',
+                        'Muita matéria acumulada antes da prova'
+                      ].map((painPoint, index) => (
+                        <label key={index} className={`flex items-start space-x-4 cursor-pointer group p-3 rounded-lg transition-all duration-200 ${
+                          theme === 'light'
+                            ? 'hover:bg-white/70 hover:shadow-sm'
+                            : 'hover:bg-gray-700/50'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={painPoints2.includes(painPoint)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setPainPoints2([...painPoints2, painPoint]);
+                              } else {
+                                setPainPoints2(painPoints2.filter(p => p !== painPoint));
+                              }
+                            }}
+                            disabled={isSubmitting2}
+                            className={`mt-0.5 w-5 h-5 rounded-md border-2 transition-all duration-200 ${
+                              theme === 'light'
+                                ? 'border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 hover:border-blue-400'
+                                : 'border-gray-500 text-blue-500 focus:ring-blue-400 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 bg-gray-700 hover:border-blue-400'
+                            }`}
+                          />
+                          <span className={`text-sm leading-relaxed transition-colors duration-300 font-medium ${
+                            painPoints2.includes(painPoint)
+                              ? theme === 'light'
+                                ? 'text-blue-700'
+                                : 'text-blue-300'
+                              : theme === 'light'
+                                ? 'text-gray-700 group-hover:text-blue-600'
+                                : 'text-gray-300 group-hover:text-blue-400'
+                          }`}>
+                            {painPoint}
+                          </span>
+                        </label>
+                      ))}
+                      
+                      {/* Opção "Outro" */}
+                      <label className={`flex items-start space-x-4 cursor-pointer group p-3 rounded-lg transition-all duration-200 ${
+                        theme === 'light'
+                          ? 'hover:bg-white/70 hover:shadow-sm'
+                          : 'hover:bg-gray-700/50'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={customPainPoint2.length > 0}
+                          onChange={(e) => {
+                            if (!e.target.checked) {
+                              setCustomPainPoint2('');
+                            }
+                          }}
+                          disabled={isSubmitting2}
+                          className={`mt-0.5 w-5 h-5 rounded-md border-2 transition-all duration-200 ${
+                            theme === 'light'
+                              ? 'border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 hover:border-blue-400'
+                              : 'border-gray-500 text-blue-500 focus:ring-blue-400 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 bg-gray-700 hover:border-blue-400'
+                          }`}
+                        />
+                        <span className={`text-sm leading-relaxed transition-colors duration-300 font-medium ${
+                          customPainPoint2.length > 0
+                            ? theme === 'light'
+                              ? 'text-blue-700'
+                              : 'text-blue-300'
+                            : theme === 'light'
+                              ? 'text-gray-700 group-hover:text-blue-600'
+                              : 'text-gray-300 group-hover:text-blue-400'
+                        }`}>
+                          Outro
+                        </span>
+                      </label>
+                      
+                      {/* Campo de texto para "Outro" */}
+                      <div className="mt-3">
+                        <Input
+                          type="text"
+                          placeholder="Descreva suas principais dores..."
+                          value={customPainPoint2}
+                          onChange={(e) => setCustomPainPoint2(e.target.value)}
+                          disabled={isSubmitting2}
+                          className={`transition-all h-12 ${
+                            theme === 'light'
+                              ? 'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50'
+                              : 'border-gray-600 bg-gray-700 text-white placeholder:text-gray-400 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-600'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {submitMessage2 && (
                   <div className={`text-sm p-3 rounded-md ${
                     submitMessage2.includes('✅')

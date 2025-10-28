@@ -11,12 +11,14 @@ interface FormData {
   customInstitution: string
   formType: 'waitlist' | 'notification'
   timestamp: string
+  painPoints: string[]
+  customPainPoint: string
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, whatsapp, institution, campus, course, period, customInstitution, formType } = body
+    const { name, email, whatsapp, institution, campus, course, period, customInstitution, formType, painPoints, customPainPoint } = body
 
     // Validação básica dos dados
     if (!name || !email || !whatsapp || !institution) {
@@ -72,7 +74,9 @@ export async function POST(request: NextRequest) {
       period: period ? period.trim() : '',
       customInstitution: customInstitution ? customInstitution.trim() : '',
       formType: formType || 'waitlist',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      painPoints: painPoints || [],
+      customPainPoint: customPainPoint ? customPainPoint.trim() : ''
     }
 
     // Enviar para o webhook do n8n
@@ -113,7 +117,9 @@ export async function POST(request: NextRequest) {
       period: webhookData.period,
       customInstitution: webhookData.customInstitution,
       formType: webhookData.formType,
-      timestamp: webhookData.timestamp
+      timestamp: webhookData.timestamp,
+      painPoints: webhookData.painPoints,
+      customPainPoint: webhookData.customPainPoint
     })
 
     return NextResponse.json(
